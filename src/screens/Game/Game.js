@@ -9,7 +9,7 @@ import options from "../../../options.json"
 import colors from "../../../colors"
 import Table from "../../components/table"
 import { useAtom, useAtomValue } from "jotai"
-import { store } from "../../store"
+import { store, clickCountAtom } from "../../store";
 import useInterval from "use-interval"
 import { formatTime } from "../../utils"
 import { useIsFocused } from "@react-navigation/native"
@@ -23,6 +23,7 @@ export default function Game({ navigation }) {
   const [time, setTime] = useState(0)
   const difficulty = useAtomValue(store).difficulty
   const [numOfFlags, setNumOfFlag] = useState(0)
+  const [clickCount, setClickCount] = useAtom(clickCountAtom)
   const [data, setData] = useAtom(store)
   const isDarkMode = data.darkMode
   const isFocused = useIsFocused()
@@ -61,6 +62,7 @@ export default function Game({ navigation }) {
     setTime(0)
     setTable(generateTable())
     setNumOfFlag(0)
+    setClickCount(0)
   }
 
   useEffect(() => {

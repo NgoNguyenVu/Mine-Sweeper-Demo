@@ -1,36 +1,28 @@
-import { View, Image, Text, StyleSheet } from "react-native"
-import options from "../../options.json"
-import { useAtomValue } from "jotai"
-import { store } from "../store"
-import colors from "../../colors"
+import { View, Image, Text, StyleSheet } from "react-native";
+import options from "../../options.json";
+import { useAtomValue,useAtom  } from "jotai";
+import { store, clickCountAtom  } from "../store";
+import colors from "../../colors";
 
-export default function Dashboard({ numOfFlags }) {
-  const difficulty = useAtomValue(store).difficulty
+export default function Dashboard() { 
+  const difficulty = useAtomValue(store).difficulty;
+  const [clickCount] = useAtom(clickCountAtom);
 
-  const numOfActiveMines = options[difficulty].numberOfMine - numOfFlags
+  // Chỉ hiển thị số mìn
+  const totalMines = options[difficulty].numberOfMine;
 
   return (
     <View style={styles.container}>
       <View style={styles.group}>
-        <Text style={styles.text}>{options[difficulty].numberOfMine}</Text>
+        <Text style={styles.text}>{totalMines}</Text>
         <Image source={require("../../assets/mine.png")} style={styles.icon} />
       </View>
-
-      <Text style={styles.text}>-</Text>
-
       <View style={styles.group}>
-        <Text style={styles.text}>{numOfFlags}</Text>
-        <Image
-          source={require("../../assets/redFlag.png")}
-          style={styles.icon}
-        />
+        <Text style={styles.text}>{clickCount}</Text>
+        <Image source={require("../../assets/click.png")} style={styles.icon} />
       </View>
-
-      <Text style={styles.text}>=</Text>
-
-      <Text style={styles.text}>{numOfActiveMines}</Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -42,11 +34,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6
   },
-
   group: { flexDirection: "row" },
-
   text: { fontSize: 28 },
-
   icon: {
     width: 30,
     aspectRatio: 1,
@@ -54,4 +43,4 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginTop: 5
   }
-})
+});

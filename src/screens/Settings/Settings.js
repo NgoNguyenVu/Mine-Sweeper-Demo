@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { Image, Pressable, StyleSheet, Switch, Text, View } from "react-native"
+import { Image, Pressable, StyleSheet, Switch, Text, View,Vibration  } from "react-native"
 import colors from "../../../colors"
 import { useAtom } from "jotai"
 import { store } from "../../store"
@@ -77,12 +77,19 @@ export default function Settings({ navigation }) {
   }
 
   function changeVibration() {
-    AsyncStorage.setItem("Vibration", JSON.stringify(!vibration)).catch(
+    const newVibration = !vibration;
+    AsyncStorage.setItem("Vibration", JSON.stringify(newVibration)).catch(
       (err) => {
-        console.error("error on save Vibration", err)
+        console.error("error on save Vibration", err);
       }
-    )
-    setData((data) => ({ ...data, vibration: !vibration }))
+    );
+    
+    // Gọi rung nếu bật rung
+    if (newVibration) {
+      Vibration.vibrate(100); // rung trong 100ms
+    }
+
+    setData((data) => ({ ...data, vibration: newVibration }));
   }
 
   return (

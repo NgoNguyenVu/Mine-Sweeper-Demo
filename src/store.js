@@ -1,6 +1,7 @@
 import { atom } from "jotai"
 import { Appearance } from "react-native"
 
+export const clickCountAtom = atom(0);
 export const store = atom({
   darkMode: Appearance.getColorScheme() === "dark",
   difficulty: 0,
