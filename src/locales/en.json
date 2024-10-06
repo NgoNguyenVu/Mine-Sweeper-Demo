@@ -1,0 +1,15 @@
+{
+    "namespace": {
+      "Easy": "Easy",
+      "Medium": "Medium",
+      "Hard": "Hard",
+      "notset": "Not Set",
+      "Settings": "Settings",
+      "Records": "Records",
+      "Darkmode": "Dark Mode:",
+      "Difficulty": "Difficulty:",
+      "Languages": "Languages:",
+      "Vibration": "Vibration:"
+    }
+  }
+  

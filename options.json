@@ -1,0 +1,6 @@
+[
+    { "tableLength": 6, "numberOfMine": 5 },
+    { "tableLength": 10, "numberOfMine": 16 },
+    { "tableLength": 12, "numberOfMine": 28 }
+  ]
+  

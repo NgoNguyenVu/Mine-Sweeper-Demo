@@ -1,0 +1,15 @@
+{
+    "namespace": {
+      "Easy": "Kolay",
+      "Medium": "Orta",
+      "Hard": "Zor",
+      "notset": "rekor yok",
+      "Settings": "Ayarlar",
+      "Records": "Rekorlar",
+      "Darkmode": "Koyu Mod:",
+      "Difficulty": "Zorluk:",
+      "Languages": "Diller:",
+      "Vibration": "Titreşim:"
+    }
+  }
+  
