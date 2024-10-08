@@ -1,7 +1,7 @@
-// src/firebaseConfig.js
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // Thêm import cho auth
+import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth"; // Cập nhật import cho auth
 import { getFirestore } from "firebase/firestore";
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Thêm import cho AsyncStorage
 
 const firebaseConfig = {
   apiKey: "AIzaSyB4JwxCTDnIa3N6DxD9MG69WYx9F5pl9As",
@@ -14,6 +14,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app); // Khởi tạo dịch vụ xác thực
+
+// Cấu hình Firebase Auth với AsyncStorage
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage) // Sử dụng AsyncStorage để lưu trữ trạng thái đăng nhập
+});
 
 export { db, auth }; // Xuất auth cùng với db

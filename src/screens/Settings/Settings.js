@@ -30,7 +30,7 @@ export default function Settings({ navigation }) {
   const [openLanguages, setOpenLanguages] = useState(false)
   const [languages, setLanguages] = useState([
     { label: "English", value: "en" },
-    { label: "Türkçe", value: "tr" }
+    { label: "Tiếng Việt", value: "tr" }
   ])
 
   const onLanguagesOpen = useCallback(() => {

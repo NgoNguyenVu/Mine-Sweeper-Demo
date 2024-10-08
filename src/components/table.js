@@ -13,6 +13,9 @@ import colors from "../../colors";
 import { useAtom } from "jotai";
 import { store, clickCountAtom } from "../store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from '../firebaseConfig'; // Import db từ tệp firebaseConfig
+import { getAuth } from "firebase/auth";
+import { collection, addDoc, doc, getDoc } from "firebase/firestore";
 
 const width = Dimensions.get("window").width;
 
@@ -64,94 +67,112 @@ export default function Table({
     return allCellsOpened || (allFlagsCorrect && !table.some(cell => !cell.isMine));
   }
 
-  function saveRecord() {
-    if ((difficulty === 0 && data.records.e === 0) || time < data.records.e) {
-      setData({ ...data, records: { ...data.records, e: time } });
-      AsyncStorage.setItem(
-        "Records",
-        JSON.stringify({ ...data.records, e: time })
-      );
-    }
-    if ((difficulty === 1 && data.records.m === 0) || time < data.records.m) {
-      setData({ ...data, records: { ...data.records, m: time } });
-      AsyncStorage.setItem(
-        "Records",
-        JSON.stringify({ ...data.records, m: time })
-      );
-    }
-    if ((difficulty === 2 && data.records.h === 0) || time < data.records.h) {
-      setData({ ...data, records: { ...data.records, h: time } });
-      AsyncStorage.setItem(
-        "Records",
-        JSON.stringify({ ...data.records, h: time })
-      );
-    }
-  }
+  async function saveRecord() {
+    const auth = getAuth();
+    const user = auth.currentUser;
 
-  function onPress(row, column) {
-    if (isFirst) {
-        createMines(row, column);
-        setIsFirst(false);
-        setClickCount(0);
-    }
+    if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-    if (table[row][column].isFlagged || table[row][column].isPressed || !isPlay) return;
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const gameName = userData.gameName || "Người chơi";
 
-    let newTable = [...table];
-    newTable[row][column].isPressed = true;
+            const recordData = {
+                date: new Date(),
+                difficulty: data.difficulty,
+                numberCount: clickCount + 1, // Sử dụng clickCount đã cập nhật
+                playerName: gameName,
+                time: time
+            };
 
-    // Cập nhật số lần nhấp
-    setClickCount(prev => prev + 1);
-
-    if (newTable[row][column].isMine) {
-        if (isVibrationEnabled) {
-            Vibration.vibrate(500); // Rung khi dẫm vào mìn
-        }
-        if (difficulty === 0) {
-            console.log("Chơi tiếp tục trong chế độ easy.");
+            try {
+                await addDoc(collection(db, "game_results"), recordData);
+                console.log("Record saved successfully:", recordData);
+            } catch (error) {
+                console.error("Error saving record:", error);
+            }
         } else {
-            setIsPlay(false);
-            Alert.alert("Bạn đã dẫm trúng mìn!", "Game over.");
-            return;
+            console.error("No such user document!");
+            Alert.alert("Thông báo", "Không tìm thấy tài liệu người dùng.");
         }
+    } else {
+        Alert.alert("Thông báo", "Bạn cần đăng nhập để lưu kết quả.");
     }
+}
 
-    if (newTable[row][column].numberOfAdjacentMines === 0) {
-        let neighbourTileStack = [];
-        neighbourTileStack.push([row, column]);
+  
 
-        while (neighbourTileStack.length > 0) {
-            const [rowIndex, columnIndex] = neighbourTileStack.pop();
-
-            modifierList.forEach(([rowModifier, columnModifier]) => {
-                if (
-                    rowIndex + rowModifier >= 0 &&
-                    rowIndex + rowModifier < options[difficulty].tableLength &&
-                    columnIndex + columnModifier >= 0 &&
-                    columnIndex + columnModifier < options[difficulty].tableLength &&
-                    !newTable[rowIndex + rowModifier][columnIndex + columnModifier].isPressed &&
-                    !newTable[rowIndex + rowModifier][columnIndex + columnModifier].isFlagged
-                ) {
-                    newTable[rowIndex + rowModifier][columnIndex + columnModifier].isPressed = true;
-                    if (newTable[rowIndex + rowModifier][columnIndex + columnModifier].isMine) {
-                        setIsPlay(false);
-                    }
-                    if (newTable[rowIndex + rowModifier][columnIndex + columnModifier].numberOfAdjacentMines === 0) {
-                        neighbourTileStack.push([rowIndex + rowModifier, columnIndex + columnModifier]);
-                    }
-                }
-            });
-        }
-    }
-
-    setTable(newTable);
-
-    if (isFinish()) {
-        setIsPlay(false);
-        saveRecord();
-        Alert.alert("Chúc mừng!", "Bạn đã thắng!");
-    }
+function onPress(row, column) {
+  if (isFirst) {
+      createMines(row, column);
+      setIsFirst(false);
+      setClickCount(0);
   }
+
+  if (table[row][column].isFlagged || table[row][column].isPressed || !isPlay) return;
+
+  let newTable = [...table];
+  newTable[row][column].isPressed = true;
+
+  // Cập nhật số lần nhấp
+  const currentClickCount = clickCount + 1; // Tăng click count lên 1
+  setClickCount(currentClickCount); // Cập nhật trạng thái mới
+
+  // Kiểm tra ô có phải là mìn không
+  if (newTable[row][column].isMine) {
+      if (isVibrationEnabled) {
+          Vibration.vibrate(500); // Rung khi dẫm vào mìn
+      }
+      if (difficulty === 0) {
+          console.log("Chơi tiếp tục trong chế độ easy.");
+      } else {
+          setIsPlay(false);
+          Alert.alert("Bạn đã dẫm trúng mìn!", "Game over.");
+          return;
+      }
+  }
+
+  // Nếu ô không phải là mìn và có số mìn lân cận là 0
+  if (newTable[row][column].numberOfAdjacentMines === 0) {
+      let neighbourTileStack = [];
+      neighbourTileStack.push([row, column]);
+
+      while (neighbourTileStack.length > 0) {
+          const [rowIndex, columnIndex] = neighbourTileStack.pop();
+
+          modifierList.forEach(([rowModifier, columnModifier]) => {
+              if (
+                  rowIndex + rowModifier >= 0 &&
+                  rowIndex + rowModifier < options[difficulty].tableLength &&
+                  columnIndex + columnModifier >= 0 &&
+                  columnIndex + columnModifier < options[difficulty].tableLength &&
+                  !newTable[rowIndex + rowModifier][columnIndex + columnModifier].isPressed &&
+                  !newTable[rowIndex + rowModifier][columnIndex + columnModifier].isFlagged
+              ) {
+                  newTable[rowIndex + rowModifier][columnIndex + columnModifier].isPressed = true;
+                  if (newTable[rowIndex + rowModifier][columnIndex + columnModifier].isMine) {
+                      setIsPlay(false);
+                  }
+                  if (newTable[rowIndex + rowModifier][columnIndex + columnModifier].numberOfAdjacentMines === 0) {
+                      neighbourTileStack.push([rowIndex + rowModifier, columnIndex + columnModifier]);
+                  }
+              }
+          });
+      }
+  }
+
+  setTable(newTable);
+
+  // Kiểm tra xem trò chơi đã hoàn thành hay chưa
+  if (isFinish()) {
+      setIsPlay(false);
+      saveRecord();
+      Alert.alert("Chúc mừng!", "Bạn đã thắng!");
+  }
+}
+
 
   function onFlag(row, column) {
     if (table[row][column].isPressed) return;

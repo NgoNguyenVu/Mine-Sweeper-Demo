@@ -14,13 +14,25 @@ const Login = ({ navigation }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
-      await AsyncStorage.setItem('userToken', token); // Lưu token vào AsyncStorage
+      
+      console.log('Token:', token); // Log token để kiểm tra
+  
+      await AsyncStorage.setItem('userToken', token)
+        .then(() => {
+          console.log('Token saved successfully');
+        })
+        .catch((error) => {
+          console.error('Error saving token:', error);
+        });
+  
       console.log('User logged in:', userCredential.user);
       navigation.replace('Game'); // Chuyển hướng đến màn hình Game sau khi đăng nhập
     } catch (e) {
+      console.error('Login error:', e.message);
       setError(e.message);
     }
   };
+  
 
   return (
     <View style={styles.container}>

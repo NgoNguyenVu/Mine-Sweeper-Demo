@@ -1,15 +1,15 @@
 {
     "namespace": {
-      "Easy": "Kolay",
-      "Medium": "Orta",
-      "Hard": "Zor",
-      "notset": "rekor yok",
-      "Settings": "Ayarlar",
-      "Records": "Rekorlar",
-      "Darkmode": "Koyu Mod:",
-      "Difficulty": "Zorluk:",
-      "Languages": "Diller:",
-      "Vibration": "Titreşim:"
+      "Easy": "Dễ",
+      "Medium": "Bình thường",
+      "Hard": "Khó",
+      "notset": "Không có",
+      "Settings": "Cài đặt",
+      "Records": "Kỷ lục",
+      "Darkmode": "Chế độ tối/sáng:",
+      "Difficulty": "Độ khó:",
+      "Languages": "Ngôn ngữ:",
+      "Vibration": "Chế độ rung:"
     }
   }
   

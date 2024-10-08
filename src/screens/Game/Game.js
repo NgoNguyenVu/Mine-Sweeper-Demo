@@ -151,6 +151,7 @@ export default function Game({ navigation }) {
         setIsPlay={setIsPlay}
         setNumOfFlag={setNumOfFlag}
         time={time}
+        setTime={setTime}
       />
     </View>
   )
