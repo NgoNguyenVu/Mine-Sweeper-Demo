@@ -32,6 +32,7 @@ export default function Game({ navigation }) {
 
   const [appIsReady, setAppIsReady] = useState(false);
   const [table, setTable] = useState([[]]);
+  const [showHint, setShowHint] = useState(false);
 
   function generateTable() {
     setIsPlay(true);
@@ -69,6 +70,11 @@ export default function Game({ navigation }) {
   function togglePlay() {
     setIsPlay((prev) => !prev); // Toggle the play state
   }
+
+  
+  const handleShowHint = () => {
+    setShowHint(true); // Đặt trạng thái hiển thị gợi ý
+  };
 
   useEffect(() => {
     (async function prepare() {
@@ -146,6 +152,12 @@ export default function Game({ navigation }) {
       </View>
 
       <View style={styles.buttonsContainer}>
+      <Pressable onPress={handleShowHint} style={styles.hintButton}>
+        <Image
+          source={require("../../../assets/hint.png")} // replace with your image path
+          style={styles.hintButtonImage(isDarkMode)} // Pass isDarkMode here
+        />
+      </Pressable>
       <View style={styles.centerPauseContainer}>
         <Pressable onPress={togglePlay} style={styles.pauseButtonContainer}>
           <Image
@@ -185,6 +197,8 @@ export default function Game({ navigation }) {
         setNumOfFlag={setNumOfFlag}
         time={time}
         setTime={setTime}
+        showHint={showHint}
+        setShowHint={setShowHint}
       />
     </View>
   );
@@ -216,16 +230,16 @@ const styles = StyleSheet.create({
 
   pauseButtonContainer: {
     alignItems: "center",
-    marginLeft:70
   },
 
   centerPauseContainer: {
-    flex: 1, // Takes up remaining space to center the pause button
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center", // Center vertically
   },
 
   rankingButton: {
-    marginLeft: 20,
+    marginRight: 20, // Adjust this if necessary
   },
 
   buttonsContainer: {
@@ -239,7 +253,7 @@ const styles = StyleSheet.create({
   buttonIcon: (darkMode) => ({
     width: 50,
     height: 50,
-    tintColor: darkMode ? colors.white : colors.dark, // Set the color based on dark mode
+    tintColor: darkMode ? colors.white : colors.dark,
   }),
 
   topSide: {
@@ -253,5 +267,12 @@ const styles = StyleSheet.create({
     height: 45,
     aspectRatio: 1,
     tintColor: darkMode ? colors.white : colors.dark,
+  }),
+
+  hintButtonImage: (darkMode) => ({
+    width: 50, // Set your desired width
+    height: 50, // Set your desired height
+    tintColor: darkMode ? colors.white : colors.dark, // Adjust color for dark mode
+    marginLeft:20
   }),
 });

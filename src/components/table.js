@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-
-import {
-  View,
-  Text,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Image,
-  Vibration,
-  Alert
-} from "react-native";
+import { View, Text, Dimensions, Pressable, StyleSheet, Image, Vibration, Alert} from "react-native";
 import options from "../../options.json";
 import colors from "../../colors";
 import { useAtom } from "jotai";
@@ -30,7 +20,9 @@ export default function Table({
   setIsPlay,
   setNumOfFlag,
   time,
-  setTime
+  setTime,
+  showHint,
+  setShowHint,
 }) {
   const modifierList = [
     [-1, -1],
@@ -46,32 +38,35 @@ export default function Table({
   const [data, setData] = useAtom(store);
   const [clickCount, setClickCount] = useAtom(clickCountAtom); 
 
+  const [hintShown, setHintShown] = useState(false); // Track if a hint has been shown
   const [isPaused, setIsPaused] = useState(false);
   const difficulty = data.difficulty;
   const isVibrationEnabled = data.vibration; // Kiểm tra tùy chọn rung
+
 
   function isFinish() {
     let allFlagsCorrect = true;
     let allCellsOpened = true;
 
     for (let i = 0; i < table.length; ++i) {
-        for (let j = 0; j < table.length; ++j) {
-            // Kiểm tra ô cờ
-            if (table[i][j].isFlagged && !table[i][j].isMine) {
-                allFlagsCorrect = false;
+        for (let j = 0; j < table[i].length; ++j) {
+            const cell = table[i][j];
+
+            // Check flagged cells
+            if (cell.isFlagged && !cell.isMine) {
+                allFlagsCorrect = false; // Incorrect flag
             }
-            // Kiểm tra ô đã được mở
-            if (!table[i][j].isPressed) {
-                allCellsOpened = false;
+
+            // Check if all non-mine cells are opened
+            if (!cell.isPressed && !cell.isMine) {
+                allCellsOpened = false; // There's still a non-mine cell not opened
             }
         }
     }
 
-    // Kiểm tra điều kiện thắng
-    return allCellsOpened || (allFlagsCorrect && !table.some(cell => !cell.isMine));
-  }
-
-
+    // Winning condition: all non-mine cells are opened or all flags are correct (and only flagged cells are mines)
+    return allCellsOpened && allFlagsCorrect;
+}
 
   function convertTableToFirestoreFormat(table) {
     const flatTable = {};
@@ -108,11 +103,6 @@ async function saveGameState() {
       Alert.alert("Notification", "You need to be logged in to save the game state.");
   }
 }
-
-
-
-
-
 
 function convertFirestoreFormatToTable(flatTable, size) {
   const table = Array.from({ length: size }, () => Array(size).fill(null));
@@ -182,9 +172,6 @@ async function loadGameState() {
   }
 }
 
-
-
-
 function resetGameState() {
   setTable(Array.from({ length: options[data.difficulty].tableLength }, () =>
       Array.from({ length: options[data.difficulty].tableLength }, () => ({
@@ -201,7 +188,6 @@ function resetGameState() {
   setIsFirst(true); // Reset to allow for a new game
 }
 
-
  const handlePauseResume = () => {
     setIsPaused((prev) => !prev); // Toggle pause state
     setIsPlay((prev) => !prev); // Toggle game play state
@@ -214,7 +200,6 @@ function resetGameState() {
     // Ví dụ: cập nhật bảng, kiểm tra nếu ô là mìn hay không...
     console.log(`Cell pressed at ${row}, ${column}`);
   };
-
 
   async function saveRecord() {
     const auth = getAuth();
@@ -251,7 +236,6 @@ function resetGameState() {
     }
 }
 
-  
 
 function onPress(row, column) {
   if (isFirst) {
@@ -321,7 +305,6 @@ function onPress(row, column) {
       Alert.alert("Chúc mừng!", "Bạn đã thắng!");
   }
 }
-
 
   function onFlag(row, column) {
     if (table[row][column].isPressed) return;
@@ -394,16 +377,51 @@ function onPress(row, column) {
     }
   }
 
+  const getHints = () => {
+    const hints = [];
+    table.forEach((row, rowIndex) => {
+      row.forEach((cell, cellIndex) => {
+        // Chỉ thêm ô có mìn mà chưa được nhấn hoặc cắm cờ vào danh sách gợi ý
+        if (!cell.isPressed && !cell.isFlagged && cell.isMine) {
+          hints.push({ row: rowIndex, column: cellIndex });
+        }
+      });
+    });
+    return hints;
+  };
+
   useEffect(() => {
     loadGameState(); // Load game state when the component mounts
 }, []);
 
 // You might want to save the game state when the component unmounts or when certain actions happen
-useEffect(() => {
-    return () => {
-        saveGameState(); // Save game state when the component unmounts or game is paused
-    };
-}, [isPlay, table, time]);
+  useEffect(() => {
+      return () => {
+          saveGameState(); // Save game state when the component unmounts or game is paused
+      };
+  }, [isPlay, table, time]);
+
+  useEffect(() => {
+    if (showHint) {
+      const hints = getHints();
+
+      if (hints.length > 0) {
+        // Chọn ngẫu nhiên một ô từ danh sách gợi ý
+        const randomHint = hints[Math.floor(Math.random() * hints.length)];
+        const newTable = table.map((row) =>
+          row.map((cell) => ({
+            ...cell,
+            isHinted: cell.row === randomHint.row && cell.column === randomHint.column,
+          }))
+        );
+
+        setTable(newTable);
+      }
+
+      setShowHint(false); // Đặt lại trạng thái gợi ý
+    }
+  }, [showHint]);
+ 
 
   return (
     <View style={styles.table}>
@@ -412,11 +430,12 @@ useEffect(() => {
           {row.map((cell, cellIndex) => {
             return (
               <Pressable
-                style={styles.tile(cell.isPressed, cell.isMine, difficulty)}
+                style={styles.tile(cell.isPressed, cell.isMine, difficulty, cell.isHinted)}
                 key={`${rowIndex}${cellIndex}`}
                 onPress={() => onPress(rowIndex, cellIndex)}
                 onLongPress={() => onLongPress(rowIndex, cellIndex)}
               >
+                {cell.isHinted && <Image source={require("../../assets/bomb.png")} style={styles.hintIcon(difficulty)} />}
                 {cell.isFlagged ? (
                   <Image
                     source={require("../../assets/redFlag.png")}
@@ -449,6 +468,11 @@ const styles = StyleSheet.create({
     padding: 10, // Add padding for spacing around the table
   },
 
+  hintIcon: (difficulty) => ({
+    width: width / options[difficulty].tableLength - 20,
+    height: width / options[difficulty].tableLength - 20,
+    position: "absolute",
+  }),
   row: {
     width: "100%",
     flexDirection: "row",
