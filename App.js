@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import Game from "./src/screens/Game/Game";
+import Leaderboard from './src/screens/Game/Leaderboard';
 import Settings from "./src/screens/Settings/Settings";
 import Login from "./src/screens/Login"; 
 import Register from "./src/screens/Register"; 
@@ -41,6 +42,7 @@ export default function App() {
           <>
             <Stack.Screen name="Game" component={Game} />
             <Stack.Screen name="Settings" component={Settings} />
+            <Stack.Screen name="Leaderboard" component={Leaderboard} />
           </>
         ) : (
           // Nếu chưa đăng nhập, hiển thị màn hình Đăng Nhập và Đăng Ký

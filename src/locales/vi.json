@@ -1,0 +1,28 @@
+{
+  "namespace": {
+    "Easy": "Dễ",
+    "Medium": "Trung Bình",
+    "Hard": "Khó",
+    "notset": "Chưa Đặt",
+    "Settings": "Cài Đặt",
+    "Guides": "Hướng Dẫn",
+    "Darkmode": "Chế Độ Tối:",
+    "Difficulty": "Độ Khó:",
+    "Languages": "Ngôn Ngữ:",
+    "Vibration": "Rung:",
+    "MinesweeperGuide": {
+      "title": "Hướng Dẫn Minesweeper",
+      "objectiveTitle": "Mục Tiêu:",
+      "objective": "Mục tiêu của Minesweeper là tìm tất cả các ô không có mìn mà không kích hoạt mìn.",
+      "howToPlayTitle": "Cách Chơi:",
+      "howToPlay": "Nhấn vào ô để mở. Nếu ô mở ra là ô trống, nó sẽ tự động mở các ô lân cận. Nếu bạn mở phải ô có mìn, trò chơi sẽ kết thúc.",
+      "flaggingTitle": "Đánh Dấu:",
+      "flagging": "Nếu bạn nghi ngờ một ô có mìn, hãy giữ ô đó để đánh dấu ô đó bằng cờ. Bạn có thể xóa cờ bằng cách giữ lần nữa.",
+      "gameEndTitle": "Kết Thúc Trò Chơi:",
+      "gameEnd": "Trò chơi kết thúc khi bạn mở tất cả các ô không có mìn hoặc khi bạn kích hoạt mìn. Nếu bạn hoàn thành mà không kích hoạt mìn, bạn sẽ thắng trò chơi!",
+      "tricksTitle": "Một Số Trick Cho Bạn Hoàn Thành:",
+      "trick1": "Đối với công thức 1-1: Là khi người chơi nhìn thấy được hai số 1 đứng liền nhau ở vị trí rìa của bãi mìn, và lúc này ô thứ ba trong hàng tiếp xúc tính từ ngoài vào thì chính là ô vuông an toàn.",
+      "trick2": "Đối với công thức 1-2: Là khi người chơi nhìn thấy số 2 đứng cạnh bên số 1 ở vị trí rìa của bãi mìn, và lúc này ô thứ ba bên ngoài cạnh số 2 trong hàng tiếp xúc chính là ô vuông có chứa bom."
+    }
+  }
+}

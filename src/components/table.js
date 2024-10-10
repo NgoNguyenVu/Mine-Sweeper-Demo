@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -15,7 +17,7 @@ import { store, clickCountAtom } from "../store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from '../firebaseConfig'; // Import db từ tệp firebaseConfig
 import { getAuth } from "firebase/auth";
-import { collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc,setDoc } from "firebase/firestore";
 
 const width = Dimensions.get("window").width;
 
@@ -28,6 +30,7 @@ export default function Table({
   setIsPlay,
   setNumOfFlag,
   time,
+  setTime
 }) {
   const modifierList = [
     [-1, -1],
@@ -43,6 +46,7 @@ export default function Table({
   const [data, setData] = useAtom(store);
   const [clickCount, setClickCount] = useAtom(clickCountAtom); 
 
+  const [isPaused, setIsPaused] = useState(false);
   const difficulty = data.difficulty;
   const isVibrationEnabled = data.vibration; // Kiểm tra tùy chọn rung
 
@@ -66,6 +70,151 @@ export default function Table({
     // Kiểm tra điều kiện thắng
     return allCellsOpened || (allFlagsCorrect && !table.some(cell => !cell.isMine));
   }
+
+
+
+  function convertTableToFirestoreFormat(table) {
+    const flatTable = {};
+    table.forEach((row, rowIndex) => {
+        row.forEach((cell, cellIndex) => {
+            flatTable[`${rowIndex}-${cellIndex}`] = cell; // Create a unique key
+        });
+    });
+    return flatTable;
+}
+
+async function saveGameState() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const gameStateData = {
+          table: convertTableToFirestoreFormat(table), // Convert to Firestore-friendly format
+          numOfFlag: data.numOfFlag !== undefined ? data.numOfFlag : 0,
+          time: time,
+          difficulty: data.difficulty,
+          clickCount: clickCount, // Save the current click count
+          date: new Date(),
+      };
+
+      try {
+          await setDoc(doc(db, "saved_games", user.uid), gameStateData);
+          console.log("Game state saved successfully:", gameStateData);
+      } catch (error) {
+          console.error("Error saving game state:", error);
+      }
+  } else {
+      Alert.alert("Notification", "You need to be logged in to save the game state.");
+  }
+}
+
+
+
+
+
+
+function convertFirestoreFormatToTable(flatTable, size) {
+  const table = Array.from({ length: size }, () => Array(size).fill(null));
+
+  Object.keys(flatTable).forEach((key) => {
+      const [rowIndex, cellIndex] = key.split('-').map(Number);
+      table[rowIndex][cellIndex] = flatTable[key];
+  });
+
+  return table;
+}
+
+async function loadGameState() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user) {
+      const docRef = doc(db, "saved_games", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+          const savedGame = docSnap.data();
+          console.log("Loaded saved game state:", savedGame);
+
+          // Check if there's a current game in progress
+          if (isPlay) {
+              const discard = await new Promise((resolve) => {
+                  Alert.alert(
+                      "Load Saved Game",
+                      "You have a game in progress. Do you want to load it?",
+                      [
+                          { text: "Cancel", onPress: () => resolve(false), style: "cancel" },
+                          { text: "Load", onPress: () => {
+                              resetGameState(); // Ensure state is reset
+                              resolve(true);
+                          }},
+                      ]
+                  );
+              });
+
+              if (!discard) {
+                  return; // User chose not to discard the current game
+              }
+          }
+
+          // Load the saved game state
+          try {
+              const flatTable = savedGame.table;
+              const loadedTable = convertFirestoreFormatToTable(flatTable, options[data.difficulty].tableLength);
+              setTable(loadedTable); // Set the loaded table
+              setNumOfFlag(savedGame.numOfFlag || 0); // Set the number of flags
+              setTime(savedGame.time || 0); // Set the loaded time
+              setClickCount(savedGame.clickCount || 0); // Set the loaded click count
+              setIsFirst(false); // If needed
+              setIsPlay(true); // Set game status to true, allow playing
+              console.log("Game state loaded successfully.");
+          } catch (error) {
+              console.error("Error loading game state:", error);
+              Alert.alert("Error", "Failed to load the game state. Please try again.");
+          }
+      } else {
+          Alert.alert("Error", "No saved game found.");
+          console.error("No saved game document!");
+      }
+  } else {
+      Alert.alert("Notification", "You need to be logged in to load a game.");
+  }
+}
+
+
+
+
+function resetGameState() {
+  setTable(Array.from({ length: options[data.difficulty].tableLength }, () =>
+      Array.from({ length: options[data.difficulty].tableLength }, () => ({
+          isPressed: false,
+          isFlagged: false,
+          isMine: false,
+          numberOfAdjacentMines: 0
+      }))
+  )); // Set to the initial state
+  setNumOfFlag(0);
+  setTime(0);
+  setClickCount(0); // Reset click count
+  setIsPlay(true); // Reset the game to be playable
+  setIsFirst(true); // Reset to allow for a new game
+}
+
+
+ const handlePauseResume = () => {
+    setIsPaused((prev) => !prev); // Toggle pause state
+    setIsPlay((prev) => !prev); // Toggle game play state
+  };
+
+  const handlePress = (row, column) => {
+    if (!isPlay) return; // Ngăn chặn tương tác khi trò chơi đã dừng
+
+    // Logic xử lý khi nhấn ô
+    // Ví dụ: cập nhật bảng, kiểm tra nếu ô là mìn hay không...
+    console.log(`Cell pressed at ${row}, ${column}`);
+  };
+
 
   async function saveRecord() {
     const auth = getAuth();
@@ -245,6 +394,17 @@ function onPress(row, column) {
     }
   }
 
+  useEffect(() => {
+    loadGameState(); // Load game state when the component mounts
+}, []);
+
+// You might want to save the game state when the component unmounts or when certain actions happen
+useEffect(() => {
+    return () => {
+        saveGameState(); // Save game state when the component unmounts or game is paused
+    };
+}, [isPlay, table, time]);
+
   return (
     <View style={styles.table}>
       {table.map((row, rowIndex) => (
@@ -285,31 +445,41 @@ const styles = StyleSheet.create({
   table: {
     width: "100%",
     aspectRatio: 1,
-    justifyContent: "space-evenly"
+    justifyContent: "space-evenly",
+    padding: 10, // Add padding for spacing around the table
   },
 
   row: {
     width: "100%",
     flexDirection: "row",
-    justifyContent: "space-evenly"
+    justifyContent: "space-evenly",
+    marginVertical: 5, // Add vertical margin for spacing between rows
   },
 
   tile: (isPressed, isMine, difficulty) => ({
     alignItems: "center",
     justifyContent: "center",
     aspectRatio: 1,
-    borderWidth: 1,
+    borderWidth: isPressed ? 0 : 2, // Show border only when not pressed
+    borderColor: colors.borderColor, // Add border color
     backgroundColor: isPressed
       ? isMine
         ? colors.darkRed
         : colors.tileOpened
       : colors.tileClosed,
-    width: width / options[difficulty].tableLength
+    width: width / options[difficulty].tableLength - 10, // Adjust size with padding
+    borderRadius: 10, // Add rounded corners
+    shadowColor: "#000", // Add shadow for depth
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4, // Add elevation for Android
+    margin: 2, // Add margin between tiles
   }),
 
   icon: (difficulty) => ({
-    width: width / options[difficulty].tableLength,
-    height: width / options[difficulty].tableLength,
-    resizeMode: "contain"
-  })
+    width: width / options[difficulty].tableLength - 20, // Adjust icon size with padding
+    height: width / options[difficulty].tableLength - 20,
+    resizeMode: "contain",
+  }),
 });

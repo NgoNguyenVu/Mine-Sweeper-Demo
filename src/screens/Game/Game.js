@@ -1,46 +1,46 @@
-import { StatusBar } from "expo-status-bar"
-import { useEffect, useState, useCallback } from "react"
-import { StyleSheet, Text, View, Image, Pressable } from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState, useCallback } from "react";
+import { StyleSheet, Text, View, Image, Pressable } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import * as SplashScreen from "expo-splash-screen"
-import Dashboard from "../../components/dashboard"
-import options from "../../../options.json"
-import colors from "../../../colors"
-import Table from "../../components/table"
-import { useAtom, useAtomValue } from "jotai"
+import * as SplashScreen from "expo-splash-screen";
+import Dashboard from "../../components/dashboard";
+import options from "../../../options.json";
+import colors from "../../../colors";
+import Table from "../../components/table";
+import { useAtom, useAtomValue } from "jotai";
 import { store, clickCountAtom } from "../../store";
-import useInterval from "use-interval"
-import { formatTime } from "../../utils"
-import { useIsFocused } from "@react-navigation/native"
-import { useTranslation } from "react-i18next"
+import useInterval from "use-interval";
+import { formatTime } from "../../utils";
+import { useIsFocused } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
-import "../../locales/inedex"
+import "../../locales/inedex";
 
 export default function Game({ navigation }) {
-  const [isPlay, setIsPlay] = useState(true)
-  const [isFirst, setIsFirst] = useState(true)
-  const [time, setTime] = useState(0)
-  const difficulty = useAtomValue(store).difficulty
-  const [numOfFlags, setNumOfFlag] = useState(0)
-  const [clickCount, setClickCount] = useAtom(clickCountAtom)
-  const [data, setData] = useAtom(store)
-  const isDarkMode = data.darkMode
-  const isFocused = useIsFocused()
+  const [isPlay, setIsPlay] = useState(true);
+  const [isFirst, setIsFirst] = useState(true);
+  const [time, setTime] = useState(0);
+  const difficulty = useAtomValue(store).difficulty;
+  const [numOfFlags, setNumOfFlag] = useState(0);
+  const [clickCount, setClickCount] = useAtom(clickCountAtom);
+  const [data, setData] = useAtom(store);
+  const isDarkMode = data.darkMode;
+  const isFocused = useIsFocused();
 
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation();
 
-  const [appIsReady, setAppIsReady] = useState(false)
-  const [table, setTable] = useState([[]])
+  const [appIsReady, setAppIsReady] = useState(false);
+  const [table, setTable] = useState([[]]);
 
   function generateTable() {
-    setIsPlay(true)
-    setIsFirst(true)
+    setIsPlay(true);
+    setIsFirst(true);
 
-    const field = new Array(options[difficulty].tableLength)
+    const field = new Array(options[difficulty].tableLength);
 
     for (let i = 0; i < options[difficulty].tableLength; ++i)
-      field[i] = new Array(options[difficulty].tableLength)
+      field[i] = new Array(options[difficulty].tableLength);
 
     for (let i = 0; i < options[difficulty].tableLength; ++i) {
       for (let j = 0; j < options[difficulty].tableLength; ++j) {
@@ -50,72 +50,77 @@ export default function Game({ navigation }) {
           column: j,
           numberOfAdjacentMines: 0,
           isPressed: false,
-          isFlagged: false
-        }
+          isFlagged: false,
+        };
       }
     }
 
-    return field
+    return field;
   }
 
   function onReset() {
-    setTime(0)
-    setTable(generateTable())
-    setNumOfFlag(0)
-    setClickCount(0)
+    setTime(0);
+    setTable(generateTable());
+    setNumOfFlag(0);
+    setClickCount(0);
+  }
+
+  // Toggle play state
+  function togglePlay() {
+    setIsPlay((prev) => !prev); // Toggle the play state
   }
 
   useEffect(() => {
-    ;(async function prepare() {
+    (async function prepare() {
       try {
-        const dif = await AsyncStorage.getItem("Difficulty")
+        const dif = await AsyncStorage.getItem("Difficulty");
         if (dif !== null) {
-          setData((d) => ({ ...d, difficulty: JSON.parse(dif) }))
+          setData((d) => ({ ...d, difficulty: JSON.parse(dif) }));
         }
-        const darkMode = await AsyncStorage.getItem("DarkMode")
+        const darkMode = await AsyncStorage.getItem("DarkMode");
         if (darkMode !== null) {
-          setData((d) => ({ ...d, darkMode: JSON.parse(darkMode) }))
+          setData((d) => ({ ...d, darkMode: JSON.parse(darkMode) }));
         }
-        const records = await AsyncStorage.getItem("Records")
+        const records = await AsyncStorage.getItem("Records");
         if (records !== null) {
-          setData((d) => ({ ...d, records: JSON.parse(records) }))
+          setData((d) => ({ ...d, records: JSON.parse(records) }));
         }
-        const vibration = await AsyncStorage.getItem("Vibration")
+        const vibration = await AsyncStorage.getItem("Vibration");
         if (vibration !== null) {
-          setData((d) => ({ ...d, vibration: JSON.parse(vibration) }))
+          setData((d) => ({ ...d, vibration: JSON.parse(vibration) }));
         }
-        const language = await AsyncStorage.getItem("Language")
+        const language = await AsyncStorage.getItem("Language");
         if (language !== null) {
-          setData((d) => ({ ...d, language: JSON.parse(language) }))
-          i18n.changeLanguage(JSON.parse(language))
+          setData((d) => ({ ...d, language: JSON.parse(language) }));
+          i18n.changeLanguage(JSON.parse(language));
         }
       } catch (e) {
-        console.warn(e)
+        console.warn(e);
       } finally {
-        setAppIsReady(true)
+        setAppIsReady(true);
       }
-    })()
+    })();
 
-    setTable(generateTable())
-  }, [])
+    setTable(generateTable());
+  }, []);
 
   useEffect(() => {
-    onReset()
-  }, [difficulty])
+    onReset();
+  }, [difficulty]);
 
   useInterval(
     () => setTime((t) => t + 1),
     isPlay && !isFirst && isFocused && 1000
-  )
+  );
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      await SplashScreen.hideAsync()
+      await SplashScreen.hideAsync();
     }
-  }, [appIsReady])
+  }, [appIsReady]);
 
   if (!appIsReady) {
-    return null
+    return null;
   }
 
   return (
@@ -140,6 +145,34 @@ export default function Game({ navigation }) {
         </Pressable>
       </View>
 
+      <View style={styles.buttonsContainer}>
+      <View style={styles.centerPauseContainer}>
+        <Pressable onPress={togglePlay} style={styles.pauseButtonContainer}>
+          <Image
+            source={
+              isPlay
+                ? require("../../../assets/pause.png")
+                : require("../../../assets/play.png")
+            }
+            style={styles.buttonIcon}
+          />
+          <Text style={styles.resumeButton(isDarkMode)}>
+            {isPlay ? "Pause" : "Resume"}
+          </Text>
+        </Pressable>
+      </View>
+
+      <Pressable
+        onPress={() => navigation.navigate("Leaderboard")}
+        style={styles.rankingButton}
+      >
+        <Image
+          source={require("../../../assets/ranking.png")}
+          style={styles.buttonIcon(isDarkMode)} 
+        />
+      </Pressable>
+    </View>
+
       <Dashboard numOfFlags={numOfFlags} />
 
       <Table
@@ -154,8 +187,9 @@ export default function Game({ navigation }) {
         setTime={setTime}
       />
     </View>
-  )
+  );
 }
+
 
 const styles = StyleSheet.create({
   container: (darkMode) => ({
@@ -163,26 +197,61 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     paddingTop: 25,
-    backgroundColor: darkMode ? colors.dark : colors.white
+    backgroundColor: darkMode ? colors.dark : colors.white,
   }),
 
   timer: (darkMode) => ({
     color: darkMode ? colors.white : colors.dark,
     fontSize: 45,
     fontWeight: "bold",
-    textAlign: "center"
+    textAlign: "center",
+  }),
+
+  resumeButton: (darkMode) => ({
+    color: darkMode ? colors.white : colors.dark,
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  }),
+
+  pauseButtonContainer: {
+    alignItems: "center",
+    marginLeft:70
+  },
+
+  centerPauseContainer: {
+    flex: 1, // Takes up remaining space to center the pause button
+    alignItems: "center",
+  },
+
+  rankingButton: {
+    marginLeft: 20,
+  },
+
+  buttonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+  },
+
+  buttonIcon: (darkMode) => ({
+    width: 50,
+    height: 50,
+    tintColor: darkMode ? colors.white : colors.dark, // Set the color based on dark mode
   }),
 
   topSide: {
     flexDirection: "row",
     width: "100%",
-    justifyContent: "space-around"
+    justifyContent: "space-around",
   },
 
   icon: (darkMode) => ({
     marginTop: 7,
     height: 45,
     aspectRatio: 1,
-    tintColor: darkMode ? colors.white : colors.dark
-  })
-})
+    tintColor: darkMode ? colors.white : colors.dark,
+  }),
+});

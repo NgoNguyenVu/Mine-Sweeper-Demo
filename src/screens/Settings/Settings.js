@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { Image, Pressable, StyleSheet, Switch, Text, View,Vibration  } from "react-native"
+import { Image, Pressable, StyleSheet, Switch, Text, View, Vibration,ScrollView  } from "react-native"
 import colors from "../../../colors"
 import { useAtom } from "jotai"
 import { store } from "../../store"
@@ -7,6 +7,8 @@ import DropDownPicker from "react-native-dropdown-picker"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { formatTime } from "../../utils"
 import { useTranslation } from "react-i18next"
+import { signOut } from 'firebase/auth'; // Đảm bảo import signOut
+import { auth } from '../../firebaseConfig'; // Đảm bảo đường dẫn import là chính xác
 
 export default function Settings({ navigation }) {
   const [selectedTab, setSelectedTab] = useState(0)
@@ -15,7 +17,7 @@ export default function Settings({ navigation }) {
 
   const { t, i18n } = useTranslation()
 
-  const tabs = [t("namespace.Settings"), t("namespace.Records")]
+  const tabs = [t("namespace.Settings"), t("namespace.Guides")] // Giữ lại tab Records nhưng sẽ không hiển thị nội dung
 
   const darkMode = data.darkMode
   const vibration = data.vibration
@@ -92,6 +94,15 @@ export default function Settings({ navigation }) {
     setData((data) => ({ ...data, vibration: newVibration }));
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sử dụng signOut
+      navigation.replace('Login'); // Chuyển hướng đến trang đăng nhập
+    } catch (error) {
+      console.error('Logout error:', error.message);
+    }
+  };
+  
   return (
     <View style={styles.container(darkMode)}>
       <View style={styles.dashboard}>
@@ -103,21 +114,23 @@ export default function Settings({ navigation }) {
         </Pressable>
 
         {tabs.map((item, index) => {
-          const isActive = index === selectedTab
+          const isActive = index === selectedTab;
 
           return (
             <View style={styles.tab} key={index}>
               <Pressable
                 onPress={() => {
-                  setSelectedTab(index)
+                  setSelectedTab(index);
                 }}
               >
                 <View style={styles.item(darkMode, isActive)}>
-                  <Text style={styles.tabText(darkMode, isActive)}>{item}</Text>
+                  <Text style={styles.tabText(darkMode, isActive)}>
+                    {item}
+                  </Text>
                 </View>
               </Pressable>
             </View>
-          )
+          );
         })}
       </View>
 
@@ -132,7 +145,7 @@ export default function Settings({ navigation }) {
                 thumbColor={colors.tileOpened}
                 trackColor={{
                   true: colors.tileClosed,
-                  false: darkMode ? colors.white : colors.dark
+                  false: darkMode ? colors.white : colors.dark,
                 }}
                 onValueChange={changeTheme}
                 value={darkMode}
@@ -185,7 +198,7 @@ export default function Settings({ navigation }) {
                 thumbColor={colors.tileOpened}
                 trackColor={{
                   true: colors.tileClosed,
-                  false: darkMode ? colors.white : colors.dark
+                  false: darkMode ? colors.white : colors.dark,
                 }}
                 onValueChange={changeVibration}
                 value={vibration}
@@ -193,41 +206,70 @@ export default function Settings({ navigation }) {
             </View>
           </>
         ) : (
-          <>
-            <Text style={styles.feedbackText(darkMode)}>{`${t(
-              "namespace.Easy"
-            )}: ${
-              data.records.e
-                ? formatTime(data.records.e)
-                : t("namespace.notset")
-            }`}</Text>
-            <Text style={styles.feedbackText(darkMode)}>{`${t(
-              "namespace.Medium"
-            )}: ${
-              data.records.m
-                ? formatTime(data.records.m)
-                : t("namespace.notset")
-            }`}</Text>
-            <Text style={styles.feedbackText(darkMode)}>{`${t(
-              "namespace.Hard"
-            )}: ${
-              data.records.h
-                ? formatTime(data.records.h)
-                : t("namespace.notset")
-            }`}</Text>
-          </>
+              <ScrollView style={styles.guidesContainer}>
+                <Text style={styles.guideTitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.title")}
+                </Text>
+                <Text style={styles.guideSubtitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.objectiveTitle")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.objective")}
+                </Text>
+
+                <Text style={styles.guideSubtitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.howToPlayTitle")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.howToPlay")}
+                </Text>
+
+                <Text style={styles.guideSubtitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.flaggingTitle")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.flagging")}
+                </Text>
+
+                <Text style={styles.guideSubtitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.gameEndTitle")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.gameEnd")}
+                </Text>
+
+                <Text style={styles.guideSubtitle(darkMode)}>
+                  {t("namespace.MinesweeperGuide.tricksTitle")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.trick1")}
+                </Text>
+                <Text style={styles.guideText(darkMode)}>
+                  {t("namespace.MinesweeperGuide.trick2")}
+                </Text>
+              </ScrollView>
+
         )}
       </View>
+
+      {selectedTab === 0 && (
+        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>{t("Logout")}</Text>
+        </Pressable>
+      )}
+
     </View>
-  )
+  );
 }
 
+// Enhanced styles
 const styles = StyleSheet.create({
   container: (isDarkMode) => ({
     flex: 1,
     backgroundColor: isDarkMode ? colors.dark : colors.white,
     alignItems: "center",
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   }),
 
   dashboard: {
@@ -235,62 +277,111 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 30
+    marginTop: 30,
   },
 
   back: (darkMode) => ({
     height: 30,
     width: 30,
-    tintColor: darkMode ? colors.white : colors.dark
+    tintColor: darkMode ? colors.white : colors.dark,
   }),
 
   tab: { flex: 1 },
 
   tabText: (darkMode, isActive) => ({
     color: isActive ? colors.tileOpened : darkMode ? colors.white : colors.dark,
-    fontSize: 32,
-    fontWeight: "700"
+    fontSize: 24,
+    fontWeight: "700",
   }),
 
   item: (darkMode, isActive) => ({
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
-    borderColor: isActive
-      ? colors.tileOpened
-      : darkMode
-      ? colors.dark
-      : colors.white,
-    borderBottomWidth: 2
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderColor: isActive ? colors.tileOpened : darkMode ? colors.white : colors.dark,
+    backgroundColor: isActive ? (darkMode ? colors.darkLight : colors.light) : 'transparent',
   }),
 
   main: {
     flex: 1,
     width: "100%",
-    justifyContent: "space-evenly"
+    justifyContent: "flex-start",
+    paddingVertical: 10,
   },
 
   feedbackText: (darkMode) => ({
     color: darkMode ? colors.white : colors.dark,
-    fontSize: 24,
-    fontWeight: "600"
+    fontSize: 20,
+    fontWeight: "600",
+    marginVertical: 5,
   }),
 
   row: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    marginVertical: 58,
   },
 
   text: (darkMode) => ({
     color: darkMode ? colors.white : colors.dark,
-    fontSize: 28
+    fontSize: 20,
   }),
 
   dropDownPicker: { width: "40%" },
 
   dropDownPickerStyle: (darkMode) => ({
-    backgroundColor: darkMode ? colors.white : colors.dark
-  })
-})
+    backgroundColor: darkMode ? colors.white : colors.dark,
+    borderColor: darkMode ? colors.dark : colors.white,
+  }),
+
+  logoutButton: {
+    marginBottom: 40, // Đẩy nút lên cao hơn
+    paddingVertical: 18, // Tăng chiều cao nút
+    paddingHorizontal: 50, // Tăng chiều rộng nút
+    backgroundColor: '#FF4B5C', // Màu đỏ tươi sáng hơn
+    borderRadius: 30, // Tạo góc bo tròn nhiều hơn
+    alignItems: 'center',
+    width: '80%',
+    elevation: 5, // Tăng cường bóng đổ cho Android
+    shadowColor: '#000', // Bóng đổ cho iOS
+    shadowOffset: { width: 0, height: 5 }, // Đổ bóng mạnh hơn
+    shadowOpacity: 0.4, // Tăng độ đậm của bóng
+    shadowRadius: 10, // Tăng bán kính bóng
+  },
+  
+  logoutText: {
+    color: 'white',
+    fontSize: 20, // Tăng kích thước chữ
+    fontWeight: 'bold',
+    letterSpacing: 1, // Thêm khoảng cách giữa các chữ cái
+  },
+
+  guidesContainer: {
+    padding: 20,
+  },
+  
+  guideTitle: (darkMode) => ({
+    color: darkMode ? colors.white : colors.dark,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  }),
+
+  guideSubtitle: (darkMode) => ({
+    color: darkMode ? colors.white : colors.dark,
+    fontSize: 24,
+    fontWeight: '600',
+    marginVertical: 8,
+  }),
+
+  guideText: (darkMode) => ({
+    color: darkMode ? colors.white : colors.dark,
+    fontSize: 18,
+    marginVertical: 4,
+    lineHeight: 24,
+  }),
+  
+});

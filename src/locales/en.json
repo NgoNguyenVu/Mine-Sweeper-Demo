@@ -1,15 +1,28 @@
 {
-    "namespace": {
-      "Easy": "Easy",
-      "Medium": "Medium",
-      "Hard": "Hard",
-      "notset": "Not Set",
-      "Settings": "Settings",
-      "Records": "Records",
-      "Darkmode": "Dark Mode:",
-      "Difficulty": "Difficulty:",
-      "Languages": "Languages:",
-      "Vibration": "Vibration:"
+  "namespace": {
+    "Easy": "Easy",
+    "Medium": "Medium",
+    "Hard": "Hard",
+    "notset": "Not Set",
+    "Settings": "Settings",
+    "Guides": "Tutorials",
+    "Darkmode": "Dark Mode:",
+    "Difficulty": "Difficulty:",
+    "Languages": "Languages:",
+    "Vibration": "Vibration:",
+    "MinesweeperGuide": {
+      "title": "How to Play Minesweeper",
+      "objectiveTitle": "Objective:",
+      "objective": "The goal of Minesweeper is to find all the squares without mines without triggering any mines.",
+      "howToPlayTitle": "How to Play:",
+      "howToPlay": "Tap a square to reveal it. If the square is empty, it will automatically reveal adjacent squares. If you reveal a square with a mine, the game ends.",
+      "flaggingTitle": "Flagging:",
+      "flagging": "If you suspect a square has a mine, long press on it to mark it with a flag. You can remove the flag by long pressing again.",
+      "gameEndTitle": "Game End:",
+      "gameEnd": "The game ends when you reveal all the squares without mines or when you trigger a mine. If you complete it without triggering a mine, you win the game!",
+      "tricksTitle": "Some Tricks to Help You:",
+      "trick1": "For the 1-1 rule: When the player sees two '1's adjacent at the edge of the minefield, the third square in the line touching from the outside in is the safe square.",
+      "trick2": "For the 1-2 rule: When the player sees '2' next to '1' at the edge of the minefield, the third square outside the '2' in the touching line is the square with the bomb."
     }
   }
-  
+}
