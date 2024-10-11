@@ -7,6 +7,7 @@ import Leaderboard from './src/screens/Game/Leaderboard';
 import Settings from "./src/screens/Settings/Settings";
 import Login from "./src/screens/Login"; 
 import Register from "./src/screens/Register"; 
+import ForgotPassword from "./src/screens/ForgotPassword"; // Nhập màn hình quên mật khẩu
 import { auth } from './src/firebaseConfig'; // Đảm bảo đường dẫn đúng
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -49,6 +50,7 @@ export default function App() {
           <>
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Register" component={Register} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
           </>
         )}
       </Stack.Navigator>
